@@ -1,1 +1,78 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+/**
+ * WeatherApiClient
+ *
+ * A simple Java program that fetches weather data from a REST API
+ * and displays it in a structured format.
+ *
+ * DELIVERABLE: Uses HTTP request and basic JSON parsing (no external libraries).
+ */
+public class WeatherApiClient {
+
+    public static void main(String[] args) {
+        try {
+            // Open-Meteo API URL (New Delhi example)
+            String apiUrl = "https://api.open-meteo.com/v1/forecast?latitude=28.6139&longitude=77.2090&current_weather=true";
+
+            // Create and configure connection
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            // Get response code
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                // Read the response
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(conn.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+
+                in.close();
+
+                // Convert response to String
+                String json = response.toString();
+
+                // Basic JSON parsing (without external libraries)
+                String temperature = extractValue(json, "\"temperature\":", ",");
+                String windspeed = extractValue(json, "\"windspeed\":", ",");
+                String time = extractValue(json, "\"time\":\"", "\"");
+
+                // Display result
+                System.out.println("======= WEATHER REPORT =======");
+                System.out.println("📍 Location: New Delhi, India");
+                System.out.println("🌡️  Temperature: " + temperature + "14°C");
+                System.out.println("💨 Wind Speed: " + windspeed + " 84km/h");
+                System.out.println("🕒 Timestamp: " + time);
+                System.out.println("==============================");
+
+            } else {
+                System.out.println("❌ Error: Unable to fetch data. HTTP code: " + responseCode);
+            }
+
+        } catch (Exception e) {
+            System.out.println("❌ Exception: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Simple method to extract a value from JSON based on a key.
+     */
+    private static String extractValue(String json, String key, String endChar) {
+        int start = json.indexOf(key);
+        if (start == -1) return "N/A";
+        start += key.length();
+        int end = json.indexOf(endChar, start);
+        return json.substring(start, end).replace("\"", "").trim();
+    }
+}
 
